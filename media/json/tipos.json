@@ -1,0 +1,471 @@
+{
+    "normal": {
+        "dam": [
+            "roca",
+            "acero"
+        ],
+        "recibed": [
+            "pelea"
+        ],
+        "recibem": [],
+        "dad": [],
+        "da0": [
+            "fantasma"
+        ],
+        "recibe0": [
+            "fantasma"
+        ]
+    },
+    "pelea": {
+        "dam": [
+            "volador",
+            "veneno",
+            "bicho",
+            "psiquico",
+            "hada"
+        ],
+        "recibed": [
+            "volador",
+            "psiquico",
+            "hada"
+        ],
+        "recibem": [
+            "roca",
+            "bicho",
+            "siniestro"
+        ],
+        "dad": [
+            "normal",
+            "roca",
+            "acero",
+            "hielo",
+            "siniestro"
+        ],
+        "da0": [
+            "fantasma"
+        ],
+        "recibe0": []
+    },
+    "volador": {
+        "dam": [
+            "roca",
+            "acero",
+            "electrico"
+        ],
+        "recibed": [
+            "roca",
+            "electrico",
+            "hielo"
+        ],
+        "recibem": [
+            "pelea",
+            "bicho",
+            "planta"
+        ],
+        "dad": [
+            "pelea",
+            "bicho",
+            "planta"
+        ],
+        "da0": [],
+        "recibe0": [
+            "tierra"
+        ]
+    },
+    "veneno": {
+        "dam": [
+            "veneno",
+            "tierra",
+            "roca",
+            "fantasma"
+        ],
+        "recibed": [
+            "tierra",
+            "psiquico"
+        ],
+        "recibem": [
+            "pelea",
+            "veneno",
+            "bicho",
+            "planta",
+            "hada"
+        ],
+        "dad": [
+            "planta",
+            "hada"
+        ],
+        "da0": [
+            "acero"
+        ],
+        "recibe0": []
+    },
+    "tierra": {
+        "dam": [
+            "bicho",
+            "planta"
+        ],
+        "recibed": [
+            "agua",
+            "planta",
+            "hielo"
+        ],
+        "recibem": [
+            "veneno",
+            "roca"
+        ],
+        "dad": [
+            "veneno",
+            "roca",
+            "acero",
+            "fuego",
+            "electrico"
+        ],
+        "da0": [
+            "volador"
+        ],
+        "recibe0": [
+            "electrico"
+        ]
+    },
+    "roca": {
+        "dam": [
+            "pelea",
+            "tierra",
+            "acero"
+        ],
+        "recibed": [
+            "pelea",
+            "tierra",
+            "acero",
+            "agua",
+            "planta"
+        ],
+        "recibem": [
+            "normal",
+            "volador",
+            "veneno",
+            "fuego"
+        ],
+        "dad": [
+            "volador",
+            "bicho",
+            "fuego",
+            "hielo"
+        ],
+        "da0": [],
+        "recibe0": []
+    },
+    "bicho": {
+        "dam": [
+            "pelea",
+            "volador",
+            "veneno",
+            "fantasma",
+            "acero",
+            "fuego",
+            "hada"
+        ],
+        "recibed": [
+            "volador",
+            "roca",
+            "fuego"
+        ],
+        "recibem": [
+            "pelea",
+            "tierra",
+            "planta"
+        ],
+        "dad": [
+            "planta",
+            "psiquico",
+            "siniestro"
+        ],
+        "da0": [],
+        "recibe0": []
+    },
+    "fantasma": {
+        "dam": [
+            "siniestro"
+        ],
+        "recibed": [
+            "fantasma",
+            "siniestro"
+        ],
+        "recibem": [
+            "veneno",
+            "bicho"
+        ],
+        "dad": [
+            "fantasma",
+            "psiquico"
+        ],
+        "da0": [
+            "normal"
+        ],
+        "recibe0": [
+            "normal",
+            "pelea"
+        ]
+    },
+    "acero": {
+        "dam": [
+            "acero",
+            "fuego",
+            "agua",
+            "electrico"
+        ],
+        "recibed": [
+            "pelea",
+            "tierra",
+            "fuego"
+        ],
+        "recibem": [
+            "normal",
+            "volador",
+            "roca",
+            "bicho",
+            "acero",
+            "planta",
+            "psiquico",
+            "hielo",
+            "dragon",
+            "hada"
+        ],
+        "dad": [
+            "roca",
+            "hielo",
+            "hada"
+        ],
+        "da0": [],
+        "recibe0": [
+            "veneno"
+        ]
+    },
+    "fuego": {
+        "dam": [
+            "roca",
+            "fuego",
+            "agua",
+            "dragon"
+        ],
+        "recibed": [
+            "tierra",
+            "roca",
+            "agua"
+        ],
+        "recibem": [
+            "bicho",
+            "acero",
+            "fuego",
+            "planta",
+            "hielo",
+            "hada"
+        ],
+        "dad": [
+            "bicho",
+            "acero",
+            "planta",
+            "hielo"
+        ],
+        "da0": [],
+        "recibe0": []
+    },
+    "agua": {
+        "dam": [
+            "agua",
+            "planta",
+            "dragon"
+        ],
+        "recibed": [
+            "planta",
+            "electrico"
+        ],
+        "recibem": [
+            "acero",
+            "fuego",
+            "agua",
+            "hielo"
+        ],
+        "dad": [
+            "tierra",
+            "roca",
+            "fuego"
+        ],
+        "da0": [],
+        "recibe0": []
+    },
+    "planta": {
+        "dam": [
+            "volador",
+            "veneno",
+            "bicho",
+            "acero",
+            "fuego",
+            "planta",
+            "dragon"
+        ],
+        "recibed": [
+            "volador",
+            "veneno",
+            "bicho",
+            "fuego",
+            "hielo"
+        ],
+        "recibem": [
+            "tierra",
+            "agua",
+            "planta",
+            "electrico"
+        ],
+        "dad": [
+            "tierra",
+            "roca",
+            "agua"
+        ],
+        "da0": [],
+        "recibe0": []
+    },
+    "electrico": {
+        "dam": [
+            "planta",
+            "electrico",
+            "dragon"
+        ],
+        "recibed": [
+            "tierra"
+        ],
+        "recibem": [
+            "volador",
+            "acero",
+            "electrico"
+        ],
+        "dad": [
+            "volador",
+            "agua"
+        ],
+        "da0": [
+            "tierra"
+        ],
+        "recibe0": []
+    },
+    "psiquico": {
+        "dam": [
+            "acero",
+            "psiquico"
+        ],
+        "recibed": [
+            "bicho",
+            "fantasma",
+            "siniestro"
+        ],
+        "recibem": [
+            "pelea",
+            "psiquico"
+        ],
+        "dad": [
+            "pelea",
+            "veneno"
+        ],
+        "da0": [
+            "siniestro"
+        ],
+        "recibe0": []
+    },
+    "hielo": {
+        "dam": [
+            "acero",
+            "fuego",
+            "agua",
+            "hielo"
+        ],
+        "recibed": [
+            "pelea",
+            "roca",
+            "acero",
+            "fuego"
+        ],
+        "recibem": [
+            "hielo"
+        ],
+        "dad": [
+            "volador",
+            "tierra",
+            "planta",
+            "dragon"
+        ],
+        "da0": [],
+        "recibe0": []
+    },
+    "dragon": {
+        "dam": [
+            "acero"
+        ],
+        "recibed": [
+            "hielo",
+            "dragon",
+            "hada"
+        ],
+        "recibem": [
+            "fuego",
+            "agua",
+            "planta",
+            "electrico"
+        ],
+        "dad": [
+            "dragon"
+        ],
+        "da0": [
+            "hada"
+        ],
+        "recibe0": []
+    },
+    "siniestro": {
+        "dam": [
+            "pelea",
+            "siniestro",
+            "hada"
+        ],
+        "recibed": [
+            "pelea",
+            "bicho",
+            "hada"
+        ],
+        "recibem": [
+            "fantasma",
+            "siniestro"
+        ],
+        "dad": [
+            "fantasma",
+            "psiquico"
+        ],
+        "da0": [],
+        "recibe0": [
+            "psiquico"
+        ]
+    },
+    "hada": {
+        "dam": [
+            "veneno",
+            "acero",
+            "fuego"
+        ],
+        "recibed": [
+            "veneno",
+            "acero"
+        ],
+        "recibem": [
+            "pelea",
+            "bicho",
+            "siniestro"
+        ],
+        "dad": [
+            "pelea",
+            "dragon",
+            "siniestro"
+        ],
+        "da0": [],
+        "recibe0": [
+            "dragon"
+        ]
+    }
+}
