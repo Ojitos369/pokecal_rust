@@ -1,8 +1,16 @@
 use std::env;
+use std::collections::HashMap;
+
 use mysql::prelude::*;
 use mysql::Pool;
-use std::collections::HashMap;
 use mysql::serde_json::json;
+
+use gtk4 as gtk;
+use gtk::prelude::*;
+use gtk::{glib, Application, ApplicationWindow, Orientation, Button, Entry, Label};
+use glib::clone;
+
+const APP_ID: &str = "com.ojitos369.pkcal";
 
 struct Tipo {
     id: i32,
@@ -79,8 +87,13 @@ fn get_danio(con: &mut mysql::PooledConn, tipos: Vec<&str>) -> Result<Vec<(Strin
         let query_t: String = query_tipos.replace("{tipo}", t);
         let rs = get_tipos(&mut conn, query_t)?;
         if rs.len() == 0 {
-            panic!("No existe el tipo {t}");
+            // panic!("No existe el tipo {t}");
+            // wrap error
+            let text = format!("No existe el tipo {}", t);
+            let result: Vec<(String, Vec<(String, f32)>)> = [(text, vec![])].to_vec();
+            return Ok(result);
         }
+        
 
         let tipo = &rs[0];
 
@@ -191,29 +204,153 @@ fn get_danio(con: &mut mysql::PooledConn, tipos: Vec<&str>) -> Result<Vec<(Strin
     return Ok(result);
 }
 
-fn main() -> Result<(), mysql::Error> {
-    println!("Que tipos quieres ver? ");
-    let mut tipos_str = String::new();
-    std::io::stdin().read_line(&mut tipos_str).unwrap();
-    let tipos_str = tipos_str.trim().replace(" ", "");
-    let tipos: Vec<&str> = tipos_str.split(",").collect();
 
-    let mut conn = get_conn()?;
+fn main() -> glib::ExitCode {
+    let app = Application::builder()
+        .application_id(APP_ID)
+        .build();
 
-    let danio = get_danio(&mut conn, tipos)?;
-    for d in danio {
-        println!("{}: ", d.0);
-        for f in d.1 {
-            println!("{}: {}", f.0, f.1);
-        }
-    }
+    app.connect_activate(build_ui);
 
-    Ok(())
+    app.run()
 }
 
-// to compile
-// cargo build --release
-// to run
-// cargo run --release
-// to run without compile
-// 
+
+fn build_ui(app: &Application) {
+    // One Button
+    let mut text = "Calcular (Enter)".to_string();
+    let button = Button::builder()
+        .label(text)
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+
+    // Text input
+    text = format!("Your Text: ");
+    let entry = Entry::builder()
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .placeholder_text(text.as_str())
+        .build();
+
+    // output text
+    let vbox = gtk::Box::builder()
+        .orientation(Orientation::Vertical)
+        .build();
+
+    fn set_label_text(entry: &Entry, vbox: &gtk::Box) {
+        let mut conn = get_conn().unwrap();
+        let mut text = entry.text().trim().replace(",", " ");
+        while text.contains("  ") {
+            text = text.replace("  ", " ");
+        }
+        let tipos: Vec<&str> = text.split(" ").collect();
+
+        let last_child_t = vbox.last_child();
+        let last_child = last_child_t.as_ref().unwrap();
+        let fist_child_temp = last_child.last_child();
+        // validate if is label
+        if fist_child_temp.is_some() {
+            let fist_child = fist_child_temp.unwrap();
+            // validate if is label
+            if fist_child.is::<Label>() {
+                // remove last child
+                vbox.remove(last_child);
+            }
+        }
+        
+        let new_child = gtk::Box::builder()
+            .orientation(Orientation::Vertical)
+            .build();
+
+        // try and catch message error
+        let mut danio: Vec<(String, Vec<(String, f32)>)> = Vec::new();
+        let exec_it = || -> Result<(), mysql::Error> {
+            danio = get_danio(&mut conn, tipos).unwrap();
+            Ok(())
+        };
+
+        if let Err(e) = exec_it() {
+            let text = format!("Error: {}", e);
+            let title_label = Label::builder()
+                .label(text.as_str())
+                .margin_top(12)
+                .margin_bottom(12)
+                .margin_start(12)
+                .margin_end(12)
+                .build();
+            new_child.append(&title_label);
+            vbox.append(&new_child);
+            return;
+        }
+
+        for d in danio {
+            let text = format!("Tipo: {}", d.0);
+            let title_label = Label::builder()
+                .label(text.as_str())
+                .margin_top(12)
+                .margin_bottom(12)
+                .margin_start(12)
+                .margin_end(12)
+                .build();
+            new_child.append(&title_label);
+
+            // let mut text2 = "".to_string();
+            for f in d.1 {
+                let text_damage = format!("{}: {}\n", f.0, f.1);
+                let damage_label = Label::builder()
+                    .label(text_damage.as_str())
+                    .build();
+                new_child.append(&damage_label);
+            }
+        }
+
+        vbox.append(&new_child);
+        // focus on input
+        entry.grab_focus();
+    }
+
+    // Button action
+    // on click exit text  in app window
+    button.connect_clicked(clone!(@weak entry, @weak vbox => move |_| {
+        set_label_text(&entry, &vbox);
+    }));
+
+    let hbox = gtk::Box::builder()
+        .orientation(Orientation::Horizontal)
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+
+    hbox.append(&entry);
+    hbox.append(&button);
+
+    vbox.append(&hbox);
+
+    // Capture Enter Key
+    entry.connect_activate(clone!(@weak entry, @weak vbox => move |_| {
+        set_label_text(&entry, &vbox);
+    }));
+
+    // Create the main window
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .title("pkCal")
+        .child(&vbox)
+        .build();
+
+    // Present window
+    window.present();
+}
+
+// export DB_USER='root'
+// export DB_PASSWORD='root'
+// export DB_HOST='localhost'
+// export DB_PORT='3307'
+// export DB_DATABASE='pkcal'

@@ -9,3 +9,4 @@ edition = "2021"
 [dependencies]
 mysql = "24.0.0"
 serde_json = "*"
+gtk4 = "0.7.2"
