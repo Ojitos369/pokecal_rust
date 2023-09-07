@@ -6,8 +6,10 @@ use mysql::Pool;
 use mysql::serde_json::json;
 
 use gtk4 as gtk;
+use gdk::Display;
 use gtk::prelude::*;
-use gtk::{glib, Application, ApplicationWindow, Orientation, Button, Entry, Label};
+// Button, Entry, Label, ComboBoxText, CssProvider
+use gtk::{gdk, glib, Application, ApplicationWindow, Orientation, Label, ComboBoxText, CssProvider };
 use glib::clone;
 
 const APP_ID: &str = "com.ojitos369.pkcal";
@@ -54,16 +56,25 @@ fn get_nombre(conn: &mut mysql::PooledConn, query: String) -> Result<Vec<Nombre>
     return Ok(rows);
 }
 
+fn get_all_tipos() -> Result<Vec<Tipo>, mysql::Error> {
+    let mut conn = get_conn()?;
+    let query = "SELECT * FROM tipos ORDER BY nombre ASC";
+    let rows: Vec<Tipo> = conn.query_map(query, |(id, nombre)| {
+        Tipo { id, nombre }
+    })?;
+    return Ok(rows);
+}
+
 fn get_danio(con: &mut mysql::PooledConn, tipos: Vec<&str>) -> Result<Vec<(String, Vec<(String, f32)>)>, mysql::Error> {
     let mut conn = con;
 
     let query_tipos = "SELECT * FROM tipos WHERE nombre = '{tipo}'";
-    let query_dad = "SELECT (select nombre from tipos where id = d.da_a) nombre FROM da_doble d where tipo = '{tipo}' ";
-    let query_recibed = "SELECT (select nombre from tipos where id = d.recibe_de) nombre FROM recibe_doble d where tipo = '{tipo}' ";
-    let query_dam = "SELECT (select nombre from tipos where id = d.da_a) nombre FROM da_mitad d where tipo = '{tipo}' ";
-    let query_recibem = "SELECT (select nombre from tipos where id = d.recibe_de) nombre FROM recibe_mitad d where tipo = '{tipo}' ";
-    let query_da0 = "SELECT (select nombre from tipos where id = d.da_a) nombre FROM da_nada d where tipo = '{tipo}' ";
-    let query_recibe0 = "SELECT (select nombre from tipos where id = d.recibe_de) nombre FROM recibe_nada d where tipo = '{tipo}' ";
+    let query_dad = "SELECT (select nombre from tipos where id = d.da_a) nombre FROM da_doble d where tipo = '{tipo}' order by nombre asc";
+    let query_recibed = "SELECT (select nombre from tipos where id = d.recibe_de) nombre FROM recibe_doble d where tipo = '{tipo}' order by nombre asc";
+    let query_dam = "SELECT (select nombre from tipos where id = d.da_a) nombre FROM da_mitad d where tipo = '{tipo}' order by nombre asc";
+    let query_recibem = "SELECT (select nombre from tipos where id = d.recibe_de) nombre FROM recibe_mitad d where tipo = '{tipo}' order by nombre asc";
+    let query_da0 = "SELECT (select nombre from tipos where id = d.da_a) nombre FROM da_nada d where tipo = '{tipo}' order by nombre asc";
+    let query_recibe0 = "SELECT (select nombre from tipos where id = d.recibe_de) nombre FROM recibe_nada d where tipo = '{tipo}' order by nombre asc";
 
     let mut data = json!({
         "dam": [],
@@ -204,145 +215,175 @@ fn get_danio(con: &mut mysql::PooledConn, tipos: Vec<&str>) -> Result<Vec<(Strin
     return Ok(result);
 }
 
+fn set_label_text(op1: &ComboBoxText, op2: &ComboBoxText, vbox: &gtk::Box) {
+    // val or ""
+    let val1 = op1.active_id().unwrap_or_default();
+    let val2 = op2.active_id().unwrap_or_default();
+
+    let mut tipos: Vec<&str> = Vec::new();
+
+    if val1 != "" {
+        if !tipos.contains(&val1.as_str()) {
+            tipos.push(val1.as_str());
+        }
+    }
+    if val2 != "" {
+        if !tipos.contains(&val2.as_str()) {
+            tipos.push(val2.as_str());
+        }
+    }
+
+    let last_child_t = vbox.last_child();
+    let last_child = last_child_t.as_ref().unwrap();
+    let fist_child_temp = last_child.last_child();
+    // validate if is label
+    if fist_child_temp.is_some() {
+        let fist_child = fist_child_temp.unwrap();
+        // validate if is label
+        if fist_child.is::<Label>() {
+            // remove last child
+            vbox.remove(last_child);
+        }
+    }
+    if tipos.len() == 0 {
+        return;
+    }
+
+    let mut conn = get_conn().unwrap();
+
+    let new_child = gtk::Box::builder()
+        .orientation(Orientation::Vertical)
+        .build();
+
+    // try and catch message error
+    let mut danio: Vec<(String, Vec<(String, f32)>)> = Vec::new();
+    let exec_it = || -> Result<(), mysql::Error> {
+        danio = get_danio(&mut conn, tipos).unwrap();
+        Ok(())
+    };
+
+    if let Err(e) = exec_it() {
+        let text = format!("Error: {}", e);
+        let title_label = Label::builder()
+            .label(text.as_str())
+            .build();
+        new_child.append(&title_label);
+        vbox.append(&new_child);
+        return;
+    }
+
+    for d in danio {
+        let text = format!("Tipo: {}", d.0);
+        let title_label = Label::builder()
+            .label(text.as_str())
+            .margin_bottom(15)
+            .build();
+        new_child.append(&title_label);
+
+        // let mut text2 = "".to_string();
+        for f in d.1 {
+            let text_damage = format!("{}: {}\n", f.0, f.1);
+            let damage_label = Label::builder()
+                .label(text_damage.as_str())
+                .margin_start(0)
+                .margin_end(0)
+                .margin_bottom(0)
+                .margin_top(0)
+                .build();
+            new_child.append(&damage_label);
+        }
+    }
+
+    vbox.append(&new_child);
+}
+
+
 
 fn main() -> glib::ExitCode {
     let app = Application::builder()
         .application_id(APP_ID)
         .build();
 
+    app.connect_startup(|_| load_css());
     app.connect_activate(build_ui);
 
     app.run()
 }
 
+fn load_css() {
+    // Load the CSS file and add it to the provider
+    let provider = CssProvider::new();
+    provider.load_from_data(include_str!("style.css"));
+
+    // Add the provider to the default screen
+    gtk::style_context_add_provider_for_display(
+        &Display::default().expect("Could not connect to a display."),
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+}
 
 fn build_ui(app: &Application) {
     // One Button
-    let mut text = "Calcular (Enter)".to_string();
-    let button = Button::builder()
-        .label(text)
-        .margin_top(12)
-        .margin_bottom(12)
-        .margin_start(12)
-        .margin_end(12)
+    let opciones: Vec<Tipo> = get_all_tipos().unwrap();
+
+    let opciones1 = ComboBoxText::builder()
+        .css_classes(vec!["opciones_list", "opciones1"])
+        .halign(gtk::Align::Center)
+        .margin_end(40)
+        .build();
+    let opciones2 = ComboBoxText::builder()
+        .css_classes(vec!["opciones_list", "opciones2"])
+        .halign(gtk::Align::Center)
+        .margin_start(40)
         .build();
 
-    // Text input
-    text = format!("Your Text: ");
-    let entry = Entry::builder()
-        .margin_top(12)
-        .margin_bottom(12)
-        .margin_start(12)
-        .margin_end(12)
-        .placeholder_text(text.as_str())
-        .build();
+    opciones1.append(Some(""), "-------------------");
+    opciones2.append(Some(""), "-------------------");
+    for o in opciones {
+        opciones1.append(Some(&o.nombre.to_string()), &o.nombre);
+        opciones2.append(Some(&o.nombre.to_string()), &o.nombre);
+    }
+    opciones1.set_active(Some(0));
+    opciones2.set_active(Some(0));
 
-    // output text
     let vbox = gtk::Box::builder()
         .orientation(Orientation::Vertical)
         .build();
 
-    fn set_label_text(entry: &Entry, vbox: &gtk::Box) {
-        let mut conn = get_conn().unwrap();
-        let mut text = entry.text().trim().replace(",", " ");
-        while text.contains("  ") {
-            text = text.replace("  ", " ");
-        }
-        let tipos: Vec<&str> = text.split(" ").collect();
-
-        let last_child_t = vbox.last_child();
-        let last_child = last_child_t.as_ref().unwrap();
-        let fist_child_temp = last_child.last_child();
-        // validate if is label
-        if fist_child_temp.is_some() {
-            let fist_child = fist_child_temp.unwrap();
-            // validate if is label
-            if fist_child.is::<Label>() {
-                // remove last child
-                vbox.remove(last_child);
-            }
-        }
-        
-        let new_child = gtk::Box::builder()
-            .orientation(Orientation::Vertical)
-            .build();
-
-        // try and catch message error
-        let mut danio: Vec<(String, Vec<(String, f32)>)> = Vec::new();
-        let exec_it = || -> Result<(), mysql::Error> {
-            danio = get_danio(&mut conn, tipos).unwrap();
-            Ok(())
-        };
-
-        if let Err(e) = exec_it() {
-            let text = format!("Error: {}", e);
-            let title_label = Label::builder()
-                .label(text.as_str())
-                .margin_top(12)
-                .margin_bottom(12)
-                .margin_start(12)
-                .margin_end(12)
-                .build();
-            new_child.append(&title_label);
-            vbox.append(&new_child);
-            return;
-        }
-
-        for d in danio {
-            let text = format!("Tipo: {}", d.0);
-            let title_label = Label::builder()
-                .label(text.as_str())
-                .margin_top(12)
-                .margin_bottom(12)
-                .margin_start(12)
-                .margin_end(12)
-                .build();
-            new_child.append(&title_label);
-
-            // let mut text2 = "".to_string();
-            for f in d.1 {
-                let text_damage = format!("{}: {}\n", f.0, f.1);
-                let damage_label = Label::builder()
-                    .label(text_damage.as_str())
-                    .build();
-                new_child.append(&damage_label);
-            }
-        }
-
-        vbox.append(&new_child);
-        // focus on input
-        entry.grab_focus();
-    }
-
-    // Button action
-    // on click exit text  in app window
-    button.connect_clicked(clone!(@weak entry, @weak vbox => move |_| {
-        set_label_text(&entry, &vbox);
+    opciones1.connect_changed(clone!(@weak opciones1, @weak opciones2, @weak vbox => move |_| {
+        set_label_text(&opciones1, &opciones2, &vbox);
+    }));
+    opciones2.connect_changed(clone!(@weak opciones1, @weak opciones2, @weak vbox => move |_| {
+        set_label_text(&opciones1, &opciones2, &vbox);
     }));
 
-    let hbox = gtk::Box::builder()
+    // opt className "opciones"
+    let opt = gtk::Box::builder()
         .orientation(Orientation::Horizontal)
-        .margin_top(12)
-        .margin_bottom(12)
-        .margin_start(12)
-        .margin_end(12)
+        .css_classes(vec!["opciones"])
         .build();
 
-    hbox.append(&entry);
-    hbox.append(&button);
+    opt.append(&opciones1);
+    opt.append(&opciones2);
+    
+    vbox.append(&opt);
 
-    vbox.append(&hbox);
-
-    // Capture Enter Key
-    entry.connect_activate(clone!(@weak entry, @weak vbox => move |_| {
-        set_label_text(&entry, &vbox);
-    }));
+    // overflow scroll
+    let scroll = gtk::ScrolledWindow::builder()
+        .child(&vbox)
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vscrollbar_policy(gtk::PolicyType::Automatic)
+        .build();
 
     // Create the main window
+    // width, height 500 px
     let window = ApplicationWindow::builder()
         .application(app)
         .title("pkCal")
-        .child(&vbox)
+        .child(&scroll)
+        .default_width(500)
+        .default_height(500)
         .build();
 
     // Present window
