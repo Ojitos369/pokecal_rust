@@ -1,0 +1,11 @@
+[
+    {
+        "pokedexNumber": "001",
+        "pokedexLocalNumber": "001",
+        "name": "Bulbasaur",
+        "types": [
+            "Planta",
+            "Veneno"
+        ]
+    }
+]
