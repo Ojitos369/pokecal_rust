@@ -273,15 +273,35 @@ fn set_label_text(op1: &ComboBoxText, op2: &ComboBoxText, vbox: &gtk::Box) {
     }
 
     for d in danio {
-        let text = format!("Tipo: {}", d.0);
-        let title_label = Label::builder()
-            .label(text.as_str())
-            .margin_bottom(15)
-            .build();
-        new_child.append(&title_label);
+        let mut danio_4 = 0;
+        let mut danio_2 = 0;
+        let mut danio_50 = 0;
+        let mut danio_25 = 0;
+        let mut danio_0 = 0;
 
         // let mut text2 = "".to_string();
+        let mut to_add: Vec<Label> = Vec::new();
         for f in d.1 {
+            if f.1 == 4.0 {
+                danio_4 += 1;
+            } else if {
+                f.1 == 2.0
+            } {
+                danio_2 += 1;
+            } else if {
+                f.1 == 0.5
+            } {
+                danio_50 += 1;
+            } else if {
+                f.1 == 0.25
+            } {
+                danio_25 += 1;
+            } else if {
+                f.1 == 0.0
+            } {
+                danio_0 += 1;
+            }
+
             let text_damage = format!("{}: {}\n", f.0, f.1);
             let damage_label = Label::builder()
                 .label(text_damage.as_str())
@@ -290,7 +310,19 @@ fn set_label_text(op1: &ComboBoxText, op2: &ComboBoxText, vbox: &gtk::Box) {
                 .margin_bottom(0)
                 .margin_top(0)
                 .build();
-            new_child.append(&damage_label);
+            to_add.push(damage_label);
+        }
+
+        // Se agrega el tipo elegido 
+        let text = format!("Tipo: {}\t{} - {} - {} - {} - {} -> {}, {}, {}", d.0, danio_4, danio_2, danio_50, danio_25, danio_0, danio_4+danio_2, danio_50+danio_25, danio_0);
+        let title_label = Label::builder()
+            .label(text.as_str())
+            .margin_bottom(15)
+            .build();
+        new_child.append(&title_label);
+
+        for a in to_add {
+            new_child.append(&a);
         }
     }
 
